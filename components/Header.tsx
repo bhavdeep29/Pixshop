@@ -1,0 +1,28 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+*/
+import React from 'react';
+import { SparkleIcon } from './icons';
+
+const Header: React.FC = () => {
+  return (
+    <header className="w-full py-4 px-8 border-b border-gray-700 bg-gray-800/30 backdrop-blur-sm sticky top-0 z-50">
+      <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+              <SparkleIcon className="w-6 h-6 text-blue-400" />
+              <h1 className="text-xl font-bold tracking-tight text-gray-100">
+                Pixshop
+              </h1>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-gray-500 tracking-widest uppercase">
+              Bhavdeep
+            </p>
+          </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
