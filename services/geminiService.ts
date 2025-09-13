@@ -77,7 +77,7 @@ export const generateEditedImage = async (
     hotspot: { x: number, y: number }
 ): Promise<string> => {
     console.log('Starting generative edit at:', hotspot);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to perform a natural, localized edit on the provided image based on the user's request.
@@ -121,7 +121,7 @@ export const generateFilteredImage = async (
     filterPrompt: string,
 ): Promise<string> => {
     console.log(`Starting filter generation: ${filterPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to apply a stylistic filter to the entire image based on the user's request. Do not change the composition or content, only apply the style.
@@ -158,7 +158,7 @@ export const generateAdjustedImage = async (
     adjustmentPrompt: string,
 ): Promise<string> => {
     console.log(`Starting global adjustment generation: ${adjustmentPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to perform a natural, global adjustment to the entire image based on the user's request.
@@ -197,7 +197,7 @@ export const generateEnhancedImage = async (
     originalImage: File,
 ): Promise<string> => {
     console.log(`Starting auto-enhancement...`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to apply a subtle, professional-grade auto-enhancement to the provided image.
@@ -229,7 +229,7 @@ export const extractTextFromImage = async (
     originalImage: File,
 ): Promise<string> => {
     console.log(`Starting text extraction (OCR)...`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
 
     const originalImagePart = await fileToPart(originalImage);
     const prompt = "Extract all text from the image. Provide only the text content, without any additional commentary or formatting.";
@@ -254,7 +254,7 @@ export const detectFaces = async (
     originalImage: File
 ): Promise<BoundingBox[]> => {
     console.log(`Starting face detection...`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
 
     const originalImagePart = await fileToPart(originalImage);
     const prompt = "Analyze the image to find all human faces. For each face, provide a normalized bounding box. The coordinates (x, y) should represent the top-left corner, and all values (x, y, width, height) must be floats between 0.0 and 1.0, relative to the image's total dimensions.";
@@ -319,7 +319,7 @@ export const removeBackground = async (
     originalImage: File,
 ): Promise<string> => {
     console.log(`Starting background removal...`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to accurately identify the main subject(s) in the image and completely remove the background, making it transparent. The output must be a PNG image with a transparent background. Do not alter the subject. Return ONLY the final image.`;
