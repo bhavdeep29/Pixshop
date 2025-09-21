@@ -337,3 +337,81 @@ export const removeBackground = async (
     
     return handleApiResponse(response, 'background removal');
 };
+
+/**
+ * Generates a video from an image and a text prompt.
+ * @param originalImage The original image file.
+ * @param prompt The text prompt describing the desired video.
+ * @param onProgress A callback function to report progress.
+ * @returns A promise that resolves to the object URL of the generated video.
+ */
+export const generateVideoFromImage = async (
+    originalImage: File,
+    prompt: string,
+    onProgress: (message: string) => void,
+): Promise<string> => {
+    console.log(`Starting video generation: ${prompt}`);
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    
+    const imagePart = await fileToPart(originalImage);
+
+    onProgress('Sending request to the video model...');
+    let operation = await ai.models.generateVideos({
+        model: 'veo-2.0-generate-001',
+        prompt: prompt,
+        image: {
+            imageBytes: imagePart.inlineData.data,
+            mimeType: imagePart.inlineData.mimeType,
+        },
+        config: {
+            numberOfVideos: 1
+        }
+    });
+
+    onProgress('Video generation in progress... this can take several minutes.');
+    let progressCounter = 0;
+    const progressMessages = [
+        'Warming up the pixels...',
+        'Directing the digital actors...',
+        'Rendering the first frames...',
+        'Compositing the scene...',
+        'Adding cinematic flair...',
+        'Finalizing the masterpiece...',
+    ];
+    
+    while (!operation.done) {
+        onProgress(`Video generation in progress... ${progressMessages[progressCounter % progressMessages.length]}`);
+        progressCounter++;
+        await new Promise(resolve => setTimeout(resolve, 10000)); // Poll every 10 seconds
+        try {
+            operation = await ai.operations.getVideosOperation({operation: operation});
+        } catch (e) {
+            console.error("Error polling for video operation status:", e);
+            throw new Error("Failed to get video generation status. Please try again.");
+        }
+    }
+
+    if (operation.error) {
+        console.error("Video generation failed:", operation.error);
+        throw new Error(`Video generation failed: ${operation.error.message}`);
+    }
+
+    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+    if (!downloadLink) {
+        console.error("No download link found in the video generation response.", operation);
+        throw new Error("Video generation completed, but no video URL was returned.");
+    }
+    
+    onProgress('Downloading generated video...');
+
+    // The response.body contains the MP4 bytes. You must append an API key when fetching from the download link.
+    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY!}`);
+    if (!response.ok) {
+        throw new Error(`Failed to download the generated video. Status: ${response.status}`);
+    }
+    const videoBlob = await response.blob();
+    const videoUrl = URL.createObjectURL(videoBlob);
+    
+    console.log('Video generation successful. URL:', videoUrl);
+    return videoUrl;
+};

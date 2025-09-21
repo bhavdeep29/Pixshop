@@ -6,17 +6,19 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
-import { generateEditedImage, generateFilteredImage, generateAdjustedImage, generateEnhancedImage, extractTextFromImage, detectFaces, removeBackground } from './services/geminiService';
+import { generateEditedImage, generateFilteredImage, generateAdjustedImage, generateEnhancedImage, extractTextFromImage, detectFaces, removeBackground, generateVideoFromImage } from './services/geminiService';
 import Header from './components/Header';
 import Spinner from './components/Spinner';
 import FilterPanel from './components/FilterPanel';
-import AdjustmentPanel from './components/AdjustmentPanel';
+import EnhancePanel from './components/EnhancePanel';
 import CropPanel from './components/CropPanel';
 import ResizePanel from './components/ResizePanel';
 import ExportModal from './components/ExportModal';
 import ExtractTextPanel from './components/ExtractTextPanel';
 import FaceDetectionPanel, { type BoundingBox } from './components/FaceDetectionPanel';
 import BackgroundPanel from './components/BackgroundPanel';
+import GenerateVideoPanel from './components/GenerateVideoPanel';
+import VideoModal from './components/VideoModal';
 import { UndoIcon, RedoIcon, EyeIcon, MagicWandIcon, ExportIcon, SparkleIcon } from './components/icons';
 import StartScreen from './components/StartScreen';
 import Toast from './components/Toast';
@@ -39,7 +41,7 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
     return new File([u8arr], filename, {type:mime});
 }
 
-type Tab = 'retouch' | 'adjust' | 'filters' | 'crop' | 'extract-text' | 'resize' | 'face-detection' | 'background';
+type Tab = 'retouch' | 'enhance' | 'filters' | 'crop' | 'extract-text' | 'resize' | 'face-detection' | 'background' | 'generate-video';
 
 const App: React.FC = () => {
   const [history, setHistory] = useState<File[]>([]);
@@ -61,6 +63,8 @@ const App: React.FC = () => {
   const [isComparing, setIsComparing] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [imageDimensions, setImageDimensions] = useState<{width: number, height: number} | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const currentImage = history[historyIndex] ?? null;
@@ -72,6 +76,14 @@ const App: React.FC = () => {
   const showToast = (message: string) => {
     setToast({ message, key: Date.now() });
   };
+  
+  const closeVideoModal = useCallback(() => {
+    if (generatedVideoUrl) {
+      URL.revokeObjectURL(generatedVideoUrl);
+    }
+    setIsVideoModalOpen(false);
+    setGeneratedVideoUrl(null);
+  }, [generatedVideoUrl]);
 
   // Effect to create and revoke object URLs safely for the current image
   useEffect(() => {
@@ -109,7 +121,8 @@ const App: React.FC = () => {
     setCompletedCrop(undefined);
     setExtractedText('');
     setFaces([]);
-  }, [history, historyIndex]);
+    closeVideoModal();
+  }, [history, historyIndex, closeVideoModal]);
 
   const handleImageUpload = useCallback((file: File) => {
     setError(null);
@@ -122,7 +135,8 @@ const App: React.FC = () => {
     setCompletedCrop(undefined);
     setExtractedText('');
     setFaces([]);
-  }, []);
+    closeVideoModal();
+  }, [closeVideoModal]);
 
   const handleGenerate = useCallback(async () => {
     if (!currentImage) {
@@ -447,6 +461,31 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [currentImage, addImageToHistory]);
+  
+  const handleGenerateVideo = useCallback(async (prompt: string) => {
+    if (!currentImage) {
+      setError('No image loaded to generate a video from.');
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadingMessage('Initializing video generation...');
+    setError(null);
+
+    try {
+      const videoUrl = await generateVideoFromImage(currentImage, prompt, (message) => {
+        setLoadingMessage(message);
+      });
+      setGeneratedVideoUrl(videoUrl);
+      setIsVideoModalOpen(true);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(`Failed to generate video. ${errorMessage}`);
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentImage]);
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const { naturalWidth, naturalHeight } = e.currentTarget;
@@ -473,6 +512,7 @@ const App: React.FC = () => {
       <Header />
       {toast && <Toast key={toast.key} message={toast.message} onClose={() => setToast(null)} />}
       <ExportModal show={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} imageFile={currentImage} />
+      <VideoModal show={isVideoModalOpen} onClose={closeVideoModal} videoUrl={generatedVideoUrl} />
       
       <main className="flex-grow flex flex-col items-center p-4 md:p-8 gap-6">
         <div className="w-full max-w-7xl flex flex-col items-center gap-4">
@@ -606,7 +646,7 @@ const App: React.FC = () => {
           
           <div className="w-full max-w-4xl p-4 bg-gray-900/30 border border-gray-700/50 rounded-xl shadow-lg mt-4">
             <div className="flex justify-center border-b border-gray-700 flex-wrap">
-                {(['retouch', 'adjust', 'filters', 'crop', 'resize', 'extract-text', 'face-detection', 'background'] as Tab[]).map(tab => (
+                {(['retouch', 'enhance', 'filters', 'crop', 'resize', 'extract-text', 'face-detection', 'background', 'generate-video'] as Tab[]).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -640,12 +680,13 @@ const App: React.FC = () => {
                     </div>
                 )}
                 {activeTab === 'filters' && <FilterPanel onApplyFilter={handleApplyFilter} isLoading={isLoading} />}
-                {activeTab === 'adjust' && <AdjustmentPanel onApplyAdjustment={handleApplyAdjustment} isLoading={isLoading} />}
+                {activeTab === 'enhance' && <EnhancePanel onApplyAdjustment={handleApplyAdjustment} isLoading={isLoading} />}
                 {activeTab === 'crop' && <CropPanel onApplyCrop={handleApplyCrop} onSetAspect={setAspect} isLoading={isLoading} isCropping={!!completedCrop} />}
                 {activeTab === 'resize' && <ResizePanel onApplyResize={handleApplyResize} isLoading={isLoading} dimensions={imageDimensions} />}
                 {activeTab === 'extract-text' && <ExtractTextPanel onExtractText={handleExtractText} isLoading={isLoading} extractedText={extractedText} />}
                 {activeTab === 'face-detection' && <FaceDetectionPanel onDetectFaces={handleDetectFaces} isLoading={isLoading} faceCount={faces.length} />}
                 {activeTab === 'background' && <BackgroundPanel onRemoveBackground={handleRemoveBackground} isLoading={isLoading} />}
+                {activeTab === 'generate-video' && <GenerateVideoPanel onGenerateVideo={handleGenerateVideo} isLoading={isLoading} />}
             </div>
           </div>
 

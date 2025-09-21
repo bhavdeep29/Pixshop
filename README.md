@@ -1,60 +1,20 @@
-# Pixshop 🖼️✨  
-A modern web-based **image editing application** built with **React, TypeScript, and Vite**.  
-Pixshop brings professional-grade editing tools right into your browser, no installation required.  
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
----
+# Run and deploy your AI Studio app
 
-## 🚀 Features  
-- ✂️ **Crop & Resize** – Easily crop and resize images to your needs  
-- 🎨 **Filters & Adjustments** – Brightness, contrast, and artistic filters  
-- 🤖 **Face Detection** – Detect faces for smart editing & effects  
-- 🖌️ **Background Editing** – Change or remove backgrounds  
-- 🔤 **Extract Text** – OCR-like feature to pull text from images  
-- 📤 **Export Options** – Save your work in multiple formats  
-- 📂 **Image Upload** – Drag & drop or select images directly  
+This contains everything you need to run your app locally.
 
----
+View your app in AI Studio: https://ai.studio/apps/drive/1VNMhRuohWkRFwtV6FM3hK9aEdnIcDpZj
 
-## 🛠️ Tech Stack  
-- **Frontend:** React + TypeScript  
-- **Build Tool:** Vite  
-- **Styling:** CSS  
-- **Libraries:** (Check `package.json` for dependencies)  
+## Run Locally
 
----
+**Prerequisites:**  Node.js
 
-## 📦 Installation  
 
-1. Clone the repo:  
-   ```bash
-   git clone https://github.com/your-username/Pixshop.git
-   cd Pixshop-main
-2. Install dependencies:
-   npm install
-
-3. Start development server:
-   npm run dev
-   
-4. Open in browser:
-   http://localhost:5173
-
------------
-🖥️ Usage
------------
-Upload an image using the Image Uploader
-Apply crop, resize, filters, adjustments, or face detection
-Export the edited image
-
----------------
-📷 Screenshots
----------------
-
-<img width="537" height="681" alt="image" src="https://github.com/user-attachments/assets/55d8c17c-5921-4704-b033-b0a06e029920" />
-
-<img width="425" height="449" alt="image" src="https://github.com/user-attachments/assets/b3fc9354-fc8c-4121-9b59-b48da06b54f8" />
-
--------------------
-🌟 Acknowledgments
--------------------
-Built with ❤️ using React + Vite
-Inspiration from modern image editing tools
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
